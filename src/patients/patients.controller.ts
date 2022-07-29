@@ -6,11 +6,18 @@ import {
   Patch,
   Param,
   Res,
-  HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { CreatePatientSchema, UpdatePatientSchema } from './patients.schema';
 import { PatientsService } from './patients.service';
+import {
+  ForgotPassowrdVerifySchema,
+  ForgotPasswordSchema,
+  LoginSchema,
+  ResetPasswordSchema2,
+  VerifyEmailSchema,
+} from 'src/global/global.schema';
 
 @Controller('patients')
 export class PatientsController {
@@ -23,13 +30,7 @@ export class PatientsController {
   ) {
     const patient = await this.patientsService.create(createPatientDto);
     console.log(patient);
-    if ('message' in patient) {
-      return res.status(patient.code).send(patient);
-    }
-    return res.status(HttpStatus.CREATED).send({
-      message: 'patient registered successfully',
-      data: patient,
-    });
+    return res.status(patient.code).send(patient);
   }
 
   @Get()
@@ -38,7 +39,7 @@ export class PatientsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: string,) {
     return this.patientsService.findOne({ id: parseInt(id) });
   }
 
@@ -50,8 +51,63 @@ export class PatientsController {
     return this.patientsService.update({ id: parseInt(id) }, updatePatientDto);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.patientsService.remove(+id);
-  // }
+  @Post('/verify')
+  async verifyEmail(
+    @Res() res: Response,
+    @Body() verifyEmailDto: VerifyEmailSchema,
+  ) {
+    const response = await this.patientsService.verifyEmail(verifyEmailDto);
+
+    return res.status(response.code).send(response);
+  }
+
+  @Post('/login')
+  async login(@Res() res: Response, @Body() loginDto: LoginSchema) {
+    const response = await this.patientsService.login(loginDto);
+    return res.status(response.code).send(response);
+  }
+
+  @Post('/logout')
+  async logout(@Res() res: Response) {
+    const { id } = res.locals.patient;
+    const response = await this.patientsService.logout(id);
+    return res.status(response.code).send(response);
+  }
+
+  @Post('/resetPassword')
+  async resetPassword(
+    @Res() res: Response,
+    @Body() resetPasswordDto: ResetPasswordSchema2,
+  ) {
+    const patient = res.locals.patient;
+    const response = await this.patientsService.resetPassword({
+      newPassword: resetPasswordDto.newPassword,
+      id: patient.patient.id,
+    });
+
+    return res.status(response.code).send(response);
+  }
+
+  @Post('/forgotPassword')
+  async forgotPassword(
+    @Res() res: Response,
+    @Body() forgotPasswordDto: ForgotPasswordSchema,
+  ) {
+    const response = await this.patientsService.forgotPassword(
+      forgotPasswordDto.email,
+    );
+    return res.status(response.code).send(response);
+  }
+
+  @Post('/forgotPassword/verify')
+  async forgotPasswordOtpVerification(
+    @Res() res: Response,
+    @Body() forgotPasswordOtpVerificationDto: ForgotPassowrdVerifySchema,
+  ) {
+    const response = await this.patientsService.forgotPasswordOtpVerification(
+      forgotPasswordOtpVerificationDto,
+    );
+
+    return res.status(response.code).send(response);
+  }
 }

@@ -20,7 +20,9 @@ model Doctor {
   verified Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  qualifications DoctorQualification[] @relation("doctor")
+  qualifications DoctorQualification[] @relation("doctor_qualifications")
+  otps OTPDoctor[] @relation("doctor_otps")
+  sessions DoctorSession? @relation("doctor_session")
 }
 
 model Patient {
@@ -32,16 +34,59 @@ model Patient {
   password String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  verified Boolean @default(false)
+  otps OTPPatient[] @relation("patient_otps")
+  sessions PatientSession? @relation("patient_session")
 }
 
 model DoctorQualification {
   id Int @default(autoincrement()) @id
   imageUrl String
   qualification String
-  doctor Doctor @relation("doctor", fields: [doctorId], references: [id])
+  doctor Doctor @relation("doctor_qualifications", fields: [doctorId], references: [id])
   doctorId Int @unique
+  verified Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Admin {
   id Int @default(autoincrement()) @id
+  createadAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OTPPatient {
+  id Int @default(autoincrement()) @id
+  otp String
+  patientId Int @unique
+  patient Patient @relation("patient_otps", fields: [patientId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OTPDoctor {
+  id Int @default(autoincrement()) @id
+  otp String
+  doctorId Int @unique
+  doctor Doctor @relation("doctor_otps", fields: [doctorId], references: [id])
+  createdAt DateTime @updatedAt
+}
+
+model PatientSession {
+  id Int @default(autoincrement()) @id
+  valid Boolean @default(true)
+  patientId Int @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  patient Patient @relation("patient_session", references: [id], fields: [patientId])
+}
+
+model DoctorSession {
+  id Int @default(autoincrement()) @id
+  valid Boolean @default(true)
+  doctorId Int @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  doctor Doctor @relation("doctor_session", references: [id], fields: [doctorId])
 }

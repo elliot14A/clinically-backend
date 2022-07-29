@@ -38,3 +38,8 @@ export type UpdatePatientSchema = {
   email?: string | undefined;
   phoneNumber?: string | undefined;
 };
+
+export type ResetPasswordSchema = {
+  newPassword: string;
+  id: number;
+};
